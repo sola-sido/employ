@@ -202,13 +202,12 @@ def draw_line_chart(data, title, color_col="성별"):
     st.plotly_chart(fig, use_container_width=True)
 
 if uploaded_file is not None:
+
     try:
         if uploaded_file.name.endswith(".csv"):
             df = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.endswith(".xlsx"):
-            df = pd.read_excel(uploaded_file)
         else:
-            df = read_kosis_xls(uploaded_file)
+            df = pd.read_excel(uploaded_file)
 
         long_df = prepare_data(df)
 
@@ -223,6 +222,11 @@ if uploaded_file is not None:
             max_year,
             (min_year, max_year)
         )
+
+        filtered_df = long_df[
+            (long_df["연도"] >= year_range[0]) &
+            (long_df["연도"] <= year_range[1])
+        ]
 
         filtered_df = long_df[
             (long_df["연도"] >= year_range[0]) &
