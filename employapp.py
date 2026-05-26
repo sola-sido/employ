@@ -195,9 +195,16 @@ if uploaded_file is not None:
 
     try:
         if uploaded_file.name.endswith(".csv"):
-            df = pd.read_csv(uploaded_file)
-        else:
+
+           df = pd.read_csv(uploaded_file)
+
+        elif uploaded_file.name.endswith(".xlsx"):
+
             df = pd.read_excel(uploaded_file)
+
+        else:
+
+            df = read_kosis_xls(uploaded_file)
 
         long_df = prepare_data(df)
 
