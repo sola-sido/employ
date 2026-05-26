@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from bs4 import BeautifulSoup
+
 
 st.set_page_config(layout="wide")
 
@@ -130,76 +130,44 @@ uploaded_file = st.file_uploader(
 )
 
 def read_kosis_xls(file):
-
-    import xml.etree.ElementTree as ET
+    import re
+    import html
 
     content = file.read()
     text = content.decode("euc-kr", errors="ignore")
-    text = text.lstrip()
 
-    root = ET.fromstring(text)
+    row_blocks = re.findall(r"<Row[^>]*>(.*?)</Row>", text, flags=re.DOTALL)
 
     rows = []
-
-    for row in root.iter():
-
-        if row.tag.endswith("Row"):
-
-            values = []
-
-            for cell in row:
-
-                if cell.tag.endswith("Cell"):
-
-                    cell_text = ""
-
-                    for data in cell:
-
-                        if data.tag.endswith("Data") and data.text is not None:
-
-                            cell_text = data.text.strip()
-
-                    values.append(cell_text)
-
-            if values:
-
-                rows.append(values)
+    for block in row_blocks:
+        values = re.findall(r"<Data[^>]*>(.*?)</Data>", block, flags=re.DOTALL)
+        values = [html.unescape(v).strip() for v in values]
+        if values:
+            rows.append(values)
 
     header_index = None
-
     for i, row in enumerate(rows):
-
         if "성별" in row and "항목" in row and "단위" in row:
-
             header_index = i
             break
 
     if header_index is None:
-
-        raise ValueError("표 머리글을 찾지 못했습니다.")
+        raise ValueError("성별, 항목, 단위가 있는 표 머리글을 찾지 못했습니다.")
 
     header = rows[header_index]
-
     data = rows[header_index + 1:]
 
     max_len = len(header)
-
     cleaned_data = []
 
     for row in data:
-
         if len(row) < max_len:
-
             row = row + [""] * (max_len - len(row))
-
         elif len(row) > max_len:
-
             row = row[:max_len]
-
         cleaned_data.append(row)
 
     df = pd.DataFrame(cleaned_data, columns=header)
-
     return df
 
 def prepare_data(df):
