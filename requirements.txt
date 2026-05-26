@@ -1,7 +1,8 @@
 streamlit
 pandas
 plotly
+beautifulsoup4
 openpyxl
 xlrd
-beautifulsoup4
 lxml
+html5lib
