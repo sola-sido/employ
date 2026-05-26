@@ -132,19 +132,9 @@ uploaded_file = st.file_uploader(
 def read_kosis_xls(file):
     content = file.read()
     text = content.decode("euc-kr", errors="ignore")
-    soup = BeautifulSoup(text, "xml")
 
-    rows = []
-
-    for row in soup.find_all("Row"):
-        values = [cell.get_text(strip=True) for cell in row.find_all("Data")]
-        if values:
-            rows.append(values)
-
-    header = rows[1]
-    data = rows[2:]
-
-    df = pd.DataFrame(data, columns=header)
+    tables = pd.read_html(text)
+    df = tables[0]
 
     return df
 
