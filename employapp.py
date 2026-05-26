@@ -130,11 +130,74 @@ uploaded_file = st.file_uploader(
 )
 
 def read_kosis_xls(file):
+
+    import xml.etree.ElementTree as ET
+
     content = file.read()
     text = content.decode("euc-kr", errors="ignore")
 
-    tables = pd.read_html(text)
-    df = tables[0]
+    root = ET.fromstring(text)
+
+    rows = []
+
+    for row in root.iter():
+
+        if row.tag.endswith("Row"):
+
+            values = []
+
+            for cell in row:
+
+                if cell.tag.endswith("Cell"):
+
+                    cell_text = ""
+
+                    for data in cell:
+
+                        if data.tag.endswith("Data") and data.text is not None:
+
+                            cell_text = data.text.strip()
+
+                    values.append(cell_text)
+
+            if values:
+
+                rows.append(values)
+
+    header_index = None
+
+    for i, row in enumerate(rows):
+
+        if "성별" in row and "항목" in row and "단위" in row:
+
+            header_index = i
+            break
+
+    if header_index is None:
+
+        raise ValueError("표 머리글을 찾지 못했습니다.")
+
+    header = rows[header_index]
+
+    data = rows[header_index + 1:]
+
+    max_len = len(header)
+
+    cleaned_data = []
+
+    for row in data:
+
+        if len(row) < max_len:
+
+            row = row + [""] * (max_len - len(row))
+
+        elif len(row) > max_len:
+
+            row = row[:max_len]
+
+        cleaned_data.append(row)
+
+    df = pd.DataFrame(cleaned_data, columns=header)
 
     return df
 
