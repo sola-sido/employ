@@ -135,6 +135,7 @@ def read_kosis_xls(file):
 
     content = file.read()
     text = content.decode("euc-kr", errors="ignore")
+    text = text.lstrip()
 
     root = ET.fromstring(text)
 
